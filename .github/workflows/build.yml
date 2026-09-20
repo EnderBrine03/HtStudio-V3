@@ -1,0 +1,42 @@
+name: Build HtStudio V3
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          architecture: x64
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pyinstaller
+
+      - name: Build
+        run: |
+          pyinstaller --noconfirm --clean --noconsole --onedir --name HtStudioV3 --add-data "web;web" main.py
+          dir dist\HtStudioV3
+
+      - name: Zip
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "dist\HtStudioV3\*" -DestinationPath "dist\HtStudioV3-win.zip" -Force
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: HtStudioV3-win
+          path: dist/HtStudioV3-win.zip
+          retention-days: 30
